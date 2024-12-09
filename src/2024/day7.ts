@@ -15,90 +15,50 @@ function parse(input: string): {
 const parsedInput = parse(input);
 const parsedExample = parse(example);
 
-const add = (a: number, b: number): number => {
-  return a + b;
-};
-
-function numberOfLinesWhereSimpleAdditionWorks() {
-  let passingLines = 0;
-  parse(input).forEach((line) => {
-    if (line.nums.reduce(add, 0) === line.total) {
-      passingLines++;
+function totalCal(
+  input: {
+    total: number;
+    nums: number[];
+  }[],
+  approach: Function
+) {
+  let total = 0;
+  input.forEach((line) => {
+    if (approach(line.total, line.nums[0], line.nums.slice(1))) {
+      total += line.total;
     }
   });
-  console.log(passingLines);
-  return passingLines;
+
+  //   console.log({ part1 });
+  return total;
 }
 
-function numberOfLinesWhereMultiplicationWorks() {
-  let passingLines = 0;
-  parsedInput.forEach((line) => {
-    let ans = 1;
-    line.nums.forEach((num) => (ans *= num));
-    if (ans === line.total) {
-      passingLines++;
-    }
-  });
-  return passingLines;
+function totalCalibrationResult(total: number, current: number, remainingNumbers: number[]): boolean {
+  if (current > total) return false;
+  if (remainingNumbers.length === 0) return current === total;
+
+  const first = remainingNumbers[0];
+  const newRemaining = remainingNumbers.slice(1);
+  if (totalCalibrationResult(total, current + first, newRemaining)) return true;
+  return totalCalibrationResult(total, current * first, newRemaining);
 }
 
-// method and alternates between multiplying and adding the items in an array
-function alternateMultiplyAdd(arr: number[]): number {
-  return arr.reduce((acc, curr, index) => {
-    return index % 2 === 0 ? acc * curr : acc + curr;
-  }, 1);
+const part1Example = totalCal(parsedExample, totalCalibrationResult);
+const part1FullInput = totalCal(parsedInput, totalCalibrationResult);
+console.log({ part1Example, part1FullInput });
+
+function totalCalibrationResultWithConcat(total: number, current: number, remainingNumbers: number[]): boolean {
+  if (current > total) return false;
+  if (remainingNumbers.length === 0) return current === total;
+
+  const first = remainingNumbers[0];
+  const newRemaining = remainingNumbers.slice(1);
+  if (totalCalibrationResultWithConcat(total, current + first, newRemaining)) return true;
+  const contactNum = Number(current.toString() + first.toString());
+  if (totalCalibrationResultWithConcat(total, contactNum, newRemaining)) return true;
+  return totalCalibrationResultWithConcat(total, current * first, newRemaining);
 }
 
-function alternateAddMultiply(arr: number[]): number {
-  return arr.reduce((acc, curr, index) => {
-    return index % 2 === 1 ? acc * curr : acc + curr;
-  }, 1);
-}
-
-function alternate() {
-  let passingLines = 0;
-  parsedInput.forEach((line) => {
-    if (alternateMultiplyAdd(line.nums) === line.total) {
-      passingLines++;
-    }
-  });
-  console.log({ passingLines });
-}
-function alternate2() {
-  let passingLines = 0;
-  parsedInput.forEach((line) => {
-    if (alternateAddMultiply(line.nums) === line.total) {
-      passingLines++;
-    }
-  });
-  console.log({ passingLines });
-}
-
-function increaseNumberOfMultiples(lines) {
-  let passingLines = 0;
-  lines.forEach((line) => {
-    const numberOfSpaces = line.nums.length;
-    // I don't have the looping right here
-    for (let i = 2; i < numberOfSpaces + 1; i++) {
-      const firstINums = line.nums.slice(0, i);
-      const addFirstNums = firstINums.reduce(add, 0);
-      const restOfNums = line.nums.slice(i, numberOfSpaces + 1);
-      let a = 1;
-      restOfNums.forEach((num) => (a *= num));
-      if (addFirstNums + a === line.total) {
-        passingLines++;
-      }
-    }
-  });
-  console.log(passingLines);
-  return passingLines;
-}
-// const result = alternateMultiplyAdd([11, 6, 16, 20]);
-// console.log(result); // Output will depend on the array provided
-
-// numberOfLinesWhereSimpleAdditionWorks(); // 15
-// numberOfLinesWhereMultiplicationWorks()); // 28
-// alternate(); // 13
-// alternate2(); // 1
-// increaseNumberOfMultiples([{ total: 21037, nums: [9, 7, 18, 13] }]);
-// increaseNumberOfMultiples(parsedInput); // 16
+const part2Example = totalCal(parsedExample, totalCalibrationResultWithConcat);
+const part2FullInput = totalCal(parsedInput, totalCalibrationResultWithConcat);
+console.log({ part2Example, part2FullInput });
