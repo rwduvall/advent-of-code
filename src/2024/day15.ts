@@ -96,7 +96,7 @@ v><<>^<>>^>^>v^^<<^<v<<^v^^<>>^<^vvv>^^v<>>^v<>^<^>vvv^^>v<^v>^v>v<<<v<^^v^^<<^v
     ''
   );
 
-let warehouse = small
+const warehouse = small
   .split('\n')
   .map((row) => row.split(''))
   .map((row) =>
@@ -292,120 +292,14 @@ function moveLargeRobot(direction: string) {
       largeMoveDown();
       break;
     case '<':
-      largeMoveLeft();
+      moveRobotHorizontally('left');
       break;
     case '>':
-      largeMoveRight();
+      moveRobotHorizontally('right');
       break;
   }
   robotCurrentPosition = findRobot();
   console.log(warehouse.map((row) => row.join('')).join('\n'));
-}
-
-async function moveBot() {
-  console.log(warehouse.map((row) => row.join('')).join('\n'));
-
-  let loopCountForAnnimation = 0;
-  for (let arrow of instructions) {
-    console.log(`Move ${loopCountForAnnimation} ${arrow}:`);
-    moveLargeRobot(arrow);
-    // sleep for 1 second for the animation in the console
-    await new Promise((resolve) => setTimeout(resolve, 8));
-    loopCountForAnnimation++;
-    console.log();
-  }
-  let sumOfGPS = 0;
-  for (let i = 0; i < warehouse.length; i++) {
-    for (let j = 0; j < warehouse[0].length; j++) {
-      if (warehouse[i][j] === '[') sumOfGPS += 100 * i + j;
-    }
-  }
-  console.log({ sumOfGPS });
-}
-
-moveBot();
-
-function largeMoveLeft() {
-  let spaceToLeftIndex = robotCurrentPosition.col - 1;
-  const floorSpaceToLeft = warehouse[robotCurrentPosition.row][spaceToLeftIndex];
-  if (floorSpaceToLeft === '#') return; // hit a wall so can't move
-  if (floorSpaceToLeft === '.') {
-    // safe to move left, set old spot to empty and move robot(@)
-    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '.';
-    robotCurrentPosition = { row: robotCurrentPosition.row, col: spaceToLeftIndex };
-    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '@';
-    return;
-  }
-
-  if (floorSpaceToLeft === '[' || floorSpaceToLeft === ']') {
-    let charToLeft = warehouse[robotCurrentPosition.row][spaceToLeftIndex];
-    do {
-      spaceToLeftIndex--;
-      charToLeft = warehouse[robotCurrentPosition.row][spaceToLeftIndex];
-    } while (charToLeft === '[' || charToLeft === ']');
-    if (charToLeft === '.') {
-      // safe to move all the boxes over
-      warehouse[robotCurrentPosition.row].splice(spaceToLeftIndex, 1);
-      warehouse[robotCurrentPosition.row].splice(robotCurrentPosition.col, 0, '.');
-    } else if (charToLeft === '#') return; // can't move b/c boxes hit a wall
-  }
-  robotCurrentPosition = findRobot();
-}
-
-function largeMoveRight() {
-  let spaceToRightIndex = robotCurrentPosition.col + 1;
-  const floorSpaceToRight = warehouse[robotCurrentPosition.row][spaceToRightIndex];
-  if (floorSpaceToRight === '#') return; // hit a wall so can't move
-  if (floorSpaceToRight === '.') {
-    // safe to move Right, set old spot to empty and move robot(@)
-    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '.';
-    robotCurrentPosition = { row: robotCurrentPosition.row, col: spaceToRightIndex };
-    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '@';
-    return;
-  }
-
-  if (floorSpaceToRight === '[' || floorSpaceToRight === ']') {
-    let charToRight = warehouse[robotCurrentPosition.row][spaceToRightIndex];
-    while (charToRight === '[' || charToRight === ']') {
-      spaceToRightIndex++;
-      charToRight = warehouse[robotCurrentPosition.row][spaceToRightIndex];
-    }
-    if (charToRight === '.') {
-      // safe to move all the boxes over
-      warehouse[robotCurrentPosition.row].splice(spaceToRightIndex, 1);
-      warehouse[robotCurrentPosition.row].splice(robotCurrentPosition.col, 0, '.');
-    }
-    if (charToRight === '#') return; // can't move b/c boxes hit a wall
-  }
-  robotCurrentPosition = findRobot();
-}
-
-function findBoxesBelow(currentRow: number, currentCol: number): { row: number; col: number }[] {
-  const boxes: { row: number; col: number }[] = [];
-  const floorSpaceBelow = warehouse[currentRow + 1][currentCol];
-
-  if (floorSpaceBelow === ']') {
-    boxes.push({ row: currentRow, col: currentCol });
-    // item below
-    boxes.push({ row: currentRow + 1, col: currentCol });
-    boxes.push(...findBoxesBelow(currentRow + 1, currentCol));
-    // other side of box
-    boxes.push({ row: currentRow + 1, col: currentCol - 1 });
-    boxes.push(...findBoxesBelow(currentRow + 1, currentCol - 1));
-  }
-
-  if (floorSpaceBelow === '[') {
-    boxes.push({ row: currentRow, col: currentCol });
-    // item below
-    boxes.push({ row: currentRow + 1, col: currentCol });
-    boxes.push(...findBoxesBelow(currentRow + 1, currentCol));
-    // other side of box
-    boxes.push({ row: currentRow + 1, col: currentCol + 1 });
-    boxes.push(...findBoxesBelow(currentRow + 1, currentCol + 1));
-  }
-
-  // deduplicate box spaces
-  return makeUniqueSpaces(boxes);
 }
 
 function findBoxesAbove(currentRow: number, currentCol: number): { row: number; col: number }[] {
@@ -436,6 +330,7 @@ function findBoxesAbove(currentRow: number, currentCol: number): { row: number; 
   return makeUniqueSpaces(boxes);
 }
 
+/// utility function to deduplicate box spaces array
 function makeUniqueSpaces(boxes: { row: number; col: number }[]) {
   const uniqueSpacesSet = new Set();
   boxes.flat().forEach((antinode) => {
@@ -447,7 +342,40 @@ function makeUniqueSpaces(boxes: { row: number; col: number }[]) {
   return sorted;
 }
 
-function canMoveDown() {
+function findBoxesBelow(currentRow: number, currentCol: number): { row: number; col: number }[] {
+  const boxes: { row: number; col: number }[] = [];
+  const floorSpaceBelow = warehouse[currentRow + 1][currentCol];
+
+  if (floorSpaceBelow === ']') {
+    boxes.push({ row: currentRow, col: currentCol });
+    // item below
+    boxes.push({ row: currentRow + 1, col: currentCol });
+    boxes.push(...findBoxesBelow(currentRow + 1, currentCol));
+    // other side of box
+    boxes.push({ row: currentRow + 1, col: currentCol - 1 });
+    boxes.push(...findBoxesBelow(currentRow + 1, currentCol - 1));
+  }
+
+  if (floorSpaceBelow === '[') {
+    boxes.push({ row: currentRow, col: currentCol });
+    // item below
+    boxes.push({ row: currentRow + 1, col: currentCol });
+    boxes.push(...findBoxesBelow(currentRow + 1, currentCol));
+    // other side of box
+    boxes.push({ row: currentRow + 1, col: currentCol + 1 });
+    boxes.push(...findBoxesBelow(currentRow + 1, currentCol + 1));
+  }
+
+  // deduplicate box spaces
+  return makeUniqueSpaces(boxes);
+}
+
+function canMoveDown():
+  | boolean
+  | {
+      row: number;
+      col: number;
+    }[] {
   let canMove: boolean;
   if (warehouse[robotCurrentPosition.row + 1][robotCurrentPosition.col] === '#') {
     canMove = false;
@@ -465,7 +393,12 @@ function canMoveDown() {
   return canMove;
 }
 
-function canMoveUp() {
+function canMoveUp():
+  | boolean
+  | {
+      row: number;
+      col: number;
+    }[] {
   let canMove: boolean;
   const boxSpaces = findBoxesAbove(robotCurrentPosition.row, robotCurrentPosition.col);
   if (warehouse[robotCurrentPosition.row - 1][robotCurrentPosition.col] === '#') canMove = false;
@@ -488,6 +421,7 @@ function largeMoveDown() {
   }
   // if down is not a boolean
   if (Array.isArray(down)) {
+    // reverse the array so we can move the boxes in the correct order
     down.reverse();
     down.forEach((boxSpace) => {
       warehouse[boxSpace.row + 1][boxSpace.col] = warehouse[boxSpace.row][boxSpace.col];
@@ -514,3 +448,53 @@ function largeMoveUp() {
   }
   robotCurrentPosition = findRobot();
 }
+
+function moveRobotHorizontally(direction: 'left' | 'right') {
+  let spaceIndex = direction === 'left' ? robotCurrentPosition.col - 1 : robotCurrentPosition.col + 1;
+  const floorSpace = warehouse[robotCurrentPosition.row][spaceIndex];
+  if (floorSpace === '#') return; // hit a wall so can't move
+  if (floorSpace === '.') {
+    // safe to move, set old spot to empty and move robot(@)
+    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '.';
+    robotCurrentPosition = { row: robotCurrentPosition.row, col: spaceIndex };
+    warehouse[robotCurrentPosition.row][robotCurrentPosition.col] = '@';
+    return;
+  }
+
+  if (floorSpace === '[' || floorSpace === ']') {
+    let charToSide = warehouse[robotCurrentPosition.row][spaceIndex];
+    do {
+      spaceIndex = direction === 'left' ? spaceIndex - 1 : spaceIndex + 1;
+      charToSide = warehouse[robotCurrentPosition.row][spaceIndex];
+    } while (charToSide === '[' || charToSide === ']');
+    if (charToSide === '.') {
+      // safe to move all the boxes over
+      warehouse[robotCurrentPosition.row].splice(spaceIndex, 1);
+      warehouse[robotCurrentPosition.row].splice(robotCurrentPosition.col, 0, '.');
+    } else if (charToSide === '#') return; // can't move b/c boxes hit a wall
+  }
+  robotCurrentPosition = findRobot();
+}
+
+async function moveBot() {
+  console.log(warehouse.map((row) => row.join('')).join('\n'));
+
+  let loopCountForAnnimation = 0;
+  for (let arrow of instructions) {
+    console.log(`Move ${loopCountForAnnimation} ${arrow}:`);
+    moveLargeRobot(arrow);
+    // sleep for 1 second for the animation in the console
+    await new Promise((resolve) => setTimeout(resolve, 8));
+    loopCountForAnnimation++;
+    console.log();
+  }
+  let sumOfGPS = 0;
+  for (let i = 0; i < warehouse.length; i++) {
+    for (let j = 0; j < warehouse[0].length; j++) {
+      if (warehouse[i][j] === '[') sumOfGPS += 100 * i + j;
+    }
+  }
+  console.log({ sumOfGPS });
+}
+
+moveBot();
