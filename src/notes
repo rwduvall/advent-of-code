@@ -2,3 +2,6 @@ Command to run tests as I make changes
     npm run test -- --watch
 
 Make sure I'm on the right version of node/npm
+
+to run file: 
+    npx ts-node src/2022/day2.ts

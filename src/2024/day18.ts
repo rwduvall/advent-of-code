@@ -1,5 +1,3 @@
-type Coordinate = { x: number; y: number };
-
 const incomingBytes = `https://adventofcode.com/2024/day/18`
   .split('\n')
   .map((row) => row.split(',').map(Number))
@@ -132,3 +130,4 @@ function findByteThatBlocksPath() {
 }
 
 findByteThatBlocksPath();
+export {};

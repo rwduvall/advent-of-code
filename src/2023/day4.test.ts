@@ -1,4 +1,3 @@
-import exp = require('constants');
 import { part1, part2, example, convertInput, numberOfWinningNumbersInCard, isCardWinner } from './day4';
 
 describe('day 4', () => {

@@ -75,9 +75,9 @@ function findAllAntinodes(coordArray: Coordinate[]) {
   }
 
   // Filter out antinodes that occur at the same coordinates as an antenna
-  const filteredAntinodes = andinotes.filter((antinode) => !coordArray.some((coord) => coord.x === antinode.x && coord.y === antinode.y));
+  //   const filteredAntinodes = andinotes.filter((antinode) => !coordArray.some((coord) => coord.x === antinode.x && coord.y === antinode.y));
 
-  return [...new Set(filteredAntinodes)];
+  return [...new Set(andinotes)];
 }
 
 function findMatchingAntennas(map: string[][], searchChar: string) {

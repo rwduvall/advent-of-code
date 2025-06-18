@@ -50,13 +50,13 @@ const parsed: Line[] = [
   { key: 'frs', connections: ['qnr', 'lhk', 'lsr'] },
 ];
 
-let count = 0;
+let connectionCount = 0;
 let keys = [];
 parsed.forEach((v) => {
   if (v.connections.find((val) => val == 'jqt')) {
-    count += 1;
+    connectionCount += 1;
     keys.push(v.key);
   }
 });
 
-console.log(count, keys);
+export {}; // Add this line at the top of your file to make it a module and avoid redeclaration errors.
